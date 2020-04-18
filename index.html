@@ -1,14 +1,63 @@
 <style>
-canvas {
+.game {
+    width: 100%;
+    max-height: 100%;
+}
+
+.statsContainer {
+    float: left;
+    padding-right: 1em;
+    width: 15%;
+}
+
+.gameContainer {
+    float: right;
+    width: 80%
+}
+
+.displayContainer {
+    float: left;
+    padding-right: 1em;
+    width: 70%;
+}
+
+#enemiesContainer {
+    float: left;
+    width: 25%;
     height: 100%;
+}
+
+#enemiesParent {
+    height: 90%;
+    overflow: auto;
+}
+
+.enemy {
+    width: 48%;
+    margin-right: 1%;
+    margin-bottom: 1%;
 }
 </style>
 <script type="module" src="./main.mjs"></script>
 
-<div id="statsContainer" style="float: left; padding-right: 1em;">
-    <h1> Stats </h1>
-    <p id="stats"></p>
+<div class="statsContainer">
+    <h1 align="center"> Snake 99 </h1>
+    <p id="stats" style="display: none;"></p>
+    <label for="pwrbar">pwr:</label>
+    <progress id="pwrbar" value="0" max="10"></progress>
+    <br>
+    <label for="dmgbar">dmg:</label>
+    <progress id="dmgbar" value="0" max="100"></progress>
 </div>
-<div id="displayContainer" style="float: left;">
-    <canvas tabindex="1" id="display"></canvas>
+<div class="gameContainer">
+    <div class="displayContainer">
+        <canvas tabindex="1" id="display" class="game"></canvas>
+    </div>
+
+    <div id="enemiesContainer">
+        <h1> Enemies </h1>
+        <hr>
+        <div id="enemiesParent">
+        </div>
+    </div>
 </div>

@@ -12,43 +12,49 @@ export class Game {
     width = 20
     height = 20
 
-    constructor(id) {
+    addToSnake = 0
+
+    constructor(canvas) {
         this._ticks = 0;
 
-        this.canvas = document.getElementById(id);
+        this.canvas = canvas;
 
         this.canvas.width = this.tileSize * this.width;
         this.canvas.height = this.tileSize * this.height;
-        this.canvas.addEventListener("blur", () => {
-            alert("lost focus!");
-        });
-        this.canvas.focus();
 
         this.ctx = this.canvas.getContext("2d");
 
         this.snake = [];
         this.lastMove = Game.UP;
-        this.canvas.addEventListener("keydown", (e) => {
-            let newMove = null;
-            if (e.key == "w" || e.key == "ArrowUp")
-                newMove = Game.UP;
-            else if (e.key == "a" || e.key == "ArrowLeft")
-                newMove = Game.LEFT;
-            else if (e.key == "s" || e.key == "ArrowDown")
-                newMove = Game.DOWN;
-            else if (e.key == "d" || e.key == "ArrowRight")
-                newMove = Game.RIGHT;
-            if (newMove && newMove != this.lastMove) {
-                this.lastMove = newMove;
-                this._ticks = 0;
-            }
-        });
 
         this.applePos = [Math.floor(this.width / 2), Math.floor(this.height / 2)];
         this.collectApple();
 
-        // TODO add obstacles
-        this.obstacles = [];
+        this.pwr = 0;
+        this.dmg = 0;
+    }
+
+    changeDirection(direction) {
+        if (direction != this.lastMove) {
+            this.lastMove = direction;
+            this._ticks = 0;
+        }
+    }
+
+    shrink() {
+        if (this.pwr >= 10 && this.snake.length > 1) {
+            this.pwr -= 10;
+            const points = Math.floor(this.snake.length / 2);
+            for (let i = 0; i < points; i++)
+                this.snake.shift();
+            return points;
+        }
+    }
+
+    damage(dmg) {
+        this.dmg += dmg;
+        // TODO dmg timer and stuff
+        // also negative dmg when collecting apples
     }
 
     ticksPerMove() {
@@ -70,6 +76,7 @@ export class Game {
 
     collectApple() {
         this.snake.push(this.applePos);
+        this.pwr++;
         // TODO generate new apple position
         while (true) {
             this.applePos = [Math.floor(Math.random() * this.width), Math.floor(Math.random() * this.height)];
@@ -106,6 +113,10 @@ export class Game {
 
         if (this.applePos && posEq(this.applePos, nextPos)) {
             this.collectApple();
+            return 0;
+        } else if (this.addToSnake != 0) {
+            this.addToSnake--;
+            this.snake.push(nextPos);
             return 0;
         }
 
