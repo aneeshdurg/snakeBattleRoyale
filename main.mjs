@@ -51,126 +51,185 @@ async function main() {
     async function setupNetworking() {
         const netInfo = document.getElementById("networkInfo");
         netInfo.innerHTML = "";
-        const networkingMode = await getNetworkingMode();
+        let networkingMode = await getNetworkingMode();
 
         console.log(`Selected mode ${networkingMode}`);
-        if (networkingMode.startsWith("peer")) {
-            // TODO consider using a Worker here to offload all networking to another
-            // process.
+        if (networkingMode == "offline")
+            return;
+        // TODO consider using a Worker here to offload all networking to another
+        // process.
 
+        let loader = createLoader();
+        netInfo.innerHTML = "Connecting to network...";
+        netInfo.appendChild(loader);
+
+        const peer = new Peer(
+            {config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}});
+        let peerId = null;
+        await new Promise((resolve, reject) => {
+            peer.on('open', function(id) {
+                peerId = id;
+                resolve();
+            });
+
+            peer.on('error', function(err) {
+                console.log("peer error", err);
+                alert("Failed to establish connection! Try again or choose another option!\n" + err);
+                return setupNetworking();
+            });
+        });
+
+        netInfo.innerHTML = "";
+
+        let hostId = null;
+        let expectedClients = 0;
+
+        if (networkingMode == "lobby") {
             let loader = createLoader();
-            netInfo.innerHTML = "Connecting to network...";
+            netInfo.innerHTML = "Connecting to lobby...";
             netInfo.appendChild(loader);
+            const wsUrls = ["ws://localhost:5001/ws"];
+            let ws = null
+            for (let wsIdx = 0; wsIdx < wsUrls.length; wsIdx++) {
+                try {
+                    ws = new WebSocket(wsUrls[wsIdx]);
+                    console.log(ws);
+                    ws.addEventListener("error", (e) => {
+                        console.log(e);
+                        e.preventDefault();
+                        ws = null;
+                    });
+                    break;
+                } catch {
+                    continue;
+                }
+            }
 
-            const peer = new Peer(
-                {config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}});
-            let peerId = null;
-            await new Promise((resolve, reject) => {
-                peer.on('open', function(id) {
-                    peerId = id;
-                    resolve();
-                });
+            if (!ws) {
+                alert("Connecting to the lobby failed!");
+                return setupNetworking();
+            }
 
-                peer.on('error', function(err) {
-                    console.log("peer error", err);
-                    alert("Failed to establish connection! Try again or choose another option!\n" + err);
-                    return setupNetworking();
+            await new Promise(r => { ws.addEventListener("open", r); });
+            netInfo.innerHTML = "";
+
+            ws.send(peerId);
+
+            await new Promise(start => {
+                ws.addEventListener("message", async (m) => {
+                    const msg = JSON.parse(m.data);
+                    if (msg.type == "update") {
+                        netInfo.innerHTML += "Lobby has " + msg.clients + " clients.<br>";
+                    } else if (msg.type === "startHost") {
+                        expectedClients = msg.expectedClients;
+                        networkingMode = "peerhost";
+                        start();
+                    } else if (msg.type === "startClient") {
+                        hostId = msg.host;
+                        networkingMode = "peerconnect";
+                        start();
+                    }
                 });
             });
 
-            netInfo.innerHTML = "";
+            ws.close();
 
-            if (networkingMode.endsWith("connect")) {
-                const hostId = prompt("Enter the ID of the peer you want to connect to");
+            netInfo.innerHTML = "";
+        }
+
+        if (networkingMode.endsWith("connect")) {
+            if (!hostId) {
+                hostId = prompt("Enter the ID of the peer you want to connect to");
+
                 if (!hostId) {
                     alert("Please input a valid hostID");
                     return setupNetworking();
                 }
+            }
 
-                loader = createLoader();
-                netInfo.innerHTML = "Connecting to host...";
-                netInfo.appendChild(loader);
-                const host = peer.connect(hostId);
-                await new Promise(r => {
-                    host.on('open', () => {
-                        host.send(JSON.stringify({
-                            protocol: 'setup',
-                            type: 'handshake',
-                        }));
-                        r();
-                    });
+            loader = createLoader();
+            netInfo.innerHTML = "Connecting to host...";
+            netInfo.appendChild(loader);
+            const host = peer.connect(hostId);
+            await new Promise(r => {
+                host.on('open', () => {
+                    host.send(JSON.stringify({
+                        protocol: 'setup',
+                        type: 'handshake',
+                    }));
+                    r();
                 });
-                netInfo.innerHTML = "";
+            });
+            netInfo.innerHTML = "";
 
-                connections.set(hostId, host);
+            connections.set(hostId, host);
 
-                peer.on('connection', async (conn) => {
-                    const isValid = await validateClient(conn);
-                    if (!isValid)
-                        conn.close();
-                    else
-                        connections.set(conn.peer, conn);
-                });
+            peer.on('connection', async (conn) => {
+                const isValid = await validateClient(conn);
+                if (!isValid)
+                    conn.close();
+                else
+                    connections.set(conn.peer, conn);
+            });
 
-                loader = createLoader();
-                netInfo.innerHTML = "Waiting for host to start game...";
-                netInfo.appendChild(loader);
-                const startGame = new Promise(start => {
-                    // Setup protocol client
-                    let setupDone = false;
-                    host.on('data', async (d) => {
-                        if (setupDone)
-                            return;
+            loader = createLoader();
+            netInfo.innerHTML = "Waiting for host to start game...";
+            netInfo.appendChild(loader);
+            const startGame = new Promise(start => {
+                // Setup protocol client
+                let setupDone = false;
+                host.on('data', async (d) => {
+                    if (setupDone)
+                        return;
 
-                        const msg = JSON.parse(d);
-                        if (!msg.protocol || msg.protocol != 'setup') {
-                            alert("Malformed packet from host!");
-                            // idk
-                            location.reload();
-                        }
+                    const msg = JSON.parse(d);
+                    if (!msg.protocol || msg.protocol != 'setup') {
+                        alert("Malformed packet from host!");
+                        // idk
+                        location.reload();
+                    }
 
-                        if (msg.type == 'start') {
-                            peer.on('connection', (conn) => {
-                                // reject new connections
-                                conn.close();
-                            });
-                            start();
-                            setupDone = true;
-                        } else if (msg.type == 'advertisement') {
-                            for (let client of msg.clients) {
-                                const clientConn = peer.connect(client);
-                                await new Promise(r => {
-                                    clientConn.on('open', () => {
-                                        clientConn.send(JSON.stringify({
-                                            protocol: 'setup',
-                                            type: 'handshake',
-                                        }));
-                                        r();
-                                    });
-                                    // TODO on error!
-                                });
-                                connections.set(client, clientConn);
-                            }
-                        }
-                    });
-                });
-                await startGame;
-                netInfo.innerHTML = "";
-            } else {
-                netInfo.innerHTML = `Host ID: <b>${peerId}</b><br>`;
-                netInfo.innerHTML += "Players can join your game by entering the ID above <br><br>";
-                const startBtn = document.createElement("div");
-                startBtn.classList.add("button");
-                startBtn.innerText = "Start game";
-                netInfo.appendChild(startBtn);
-
-                const startGame = new Promise(start => {
-                    startBtn.onclick = () => {
+                    if (msg.type == 'start') {
                         peer.on('connection', (conn) => {
                             // reject new connections
                             conn.close();
                         });
+                        start();
+                        setupDone = true;
+                    } else if (msg.type == 'advertisement') {
+                        for (let client of msg.clients) {
+                            const clientConn = peer.connect(client);
+                            await new Promise(r => {
+                                clientConn.on('open', () => {
+                                    clientConn.send(JSON.stringify({
+                                        protocol: 'setup',
+                                        type: 'handshake',
+                                    }));
+                                    r();
+                                });
+                                // TODO on error!
+                            });
+                            connections.set(client, clientConn);
+                        }
+                    }
+                });
+            });
+            await startGame;
+            netInfo.innerHTML = "";
+        } else {
+            let startBtn = null;
+            if (expectedClients == 0) {
+                netInfo.innerHTML = `Host ID: <b>${peerId}</b><br>`;
+                netInfo.innerHTML += "Players can join your game by entering the ID above <br><br>";
+                startBtn = document.createElement("div");
+                startBtn.classList.add("button");
+                startBtn.innerText = "Start game";
+                netInfo.appendChild(startBtn);
+            }
 
+            const startGame = new Promise(start => {
+                if (expectedClients == 0) {
+                    startBtn.onclick = () => {
                         for (let client of connections.values()) {
                             client.send(JSON.stringify({
                                 protocol: 'setup',
@@ -180,12 +239,14 @@ async function main() {
 
                         start();
                     };
-                });
 
-                const clientsDisplay = document.getElementById("clients");
-                clientsDisplay.style.display = "";
+                    const clientsDisplay = document.getElementById("clients");
+                    clientsDisplay.style.display = "";
+                }
+
                 // Setup protocol host
                 peer.on('connection', async (conn) => {
+                    console.log("Host recieved conn!");
                     const isValid = await validateClient(conn);
                     if (!isValid)
                         conn.close();
@@ -201,21 +262,35 @@ async function main() {
                         }));
 
                         connections.set(conn.peer, conn);
-                        clientsDisplay.innerHTML = "<ul>";
-                        for (let k of connections.keys())
-                            clientsDisplay.innerHTML += `<li>${k}</li>`;
-                        clientsDisplay.innerHTML += "</ul>";
+                        if (connections.size == expectedClients)
+                            start();
+                        else {
+                            console.log("Waiting for clients", connections.size, expectedClients);
+                        }
+
+                        if (expectedClients == 0) {
+                            clientsDisplay.innerHTML = "<ul>";
+                            for (let k of connections.keys())
+                                clientsDisplay.innerHTML += `<li>${k}</li>`;
+                            clientsDisplay.innerHTML += "</ul>";
+                        }
                     }
                 });
+            });
 
-                await startGame;
-                startBtn.remove();
-                netInfo.innerHTML = "";
+            await startGame;
+            console.log("Host starting game");
+
+            for (let client of connections.values()) {
+                client.send(JSON.stringify({
+                    protocol: 'setup',
+                    type: 'start',
+                }));
             }
-        } else if (networkingMode == "lobby") {
-            // TODO
-            alert("Unimplemented");
-            return setupNetworking();
+
+            if (expectedClients == 0)
+                startBtn.remove();
+            netInfo.innerHTML = "";
         }
     }
 
@@ -226,16 +301,32 @@ async function main() {
     const canvas = document.getElementById("display");
     const game = new Game(canvas);
 
+    const enemies = [];
+
+    function resetSelection() {
+        for (let enemy of enemies) {
+            enemy.ctx.canvas.style.border = "";
+            enemy.ctx.canvas.dataset.selected = "false";
+        }
+    }
+
+    function select(canvas) {
+        resetSelection();
+        canvas.style.border = "solid 2px #afffff";
+        canvas.dataset.selected = "true";
+    }
+
     function createEnemyCtx() {
         const c = document.createElement("canvas");
         c.classList.add("enemy");
+        c.dataset.selected = "false";
+        c.onclick = () => { select(c); };
         c.width = canvas.width;
         c.height = canvas.height;
         const ctx = c.getContext("2d");
         return ctx;
     }
 
-    const enemies = [];
     const maxAIs = connections.size ? 0 : 20;
     const enemyParent = document.getElementById("enemiesParent");
 
@@ -260,8 +351,51 @@ async function main() {
         enemyParent.appendChild(ctx.canvas);
     });
 
+    select(enemies[0].ctx.canvas);
+
+    const algoBtn = document.getElementById("algo");
+    const algos = ["Random", "Power", "Damage", "Manual"];
+    algoBtn.onclick = () => {
+        const newAlgoId = (algos.findIndex((x) => x == algoBtn.dataset.algo) + 1) % 4;
+        const newAlgo = algos[newAlgoId];
+        algoBtn.innerHTML = newAlgo;
+        algoBtn.dataset.algo = newAlgo;
+    };
+
     function enemyTargetingAlgorithm() {
-        return Math.floor(Math.random() * enemies.length);
+        if (algoBtn.dataset.algo == "Random") {
+            const id = Math.floor(Math.random() * enemies.length);
+            select(enemies[id].ctx.canvas);
+            return id;
+        } else if (algoBtn.dataset.algo == "Power") {
+            const maxPwr = -Infinity;
+            const maxId = -1;
+            for (let id = 0; id < enemies.length; id++) {
+                const pwr = enemies[id].controller.pwr;
+                if (pwr > maxPwr) {
+                    maxId = id;
+                    maxPwr = pwr;
+                }
+            }
+
+            select(enemies[maxId].ctx.canvas);
+            return maxId;
+        } else if (algoBtn.dataset.algo == "Damage") {
+            const maxDmg = -Infinity;
+            const maxId = -1;
+            for (let id = 0; id < enemies.length; id++) {
+                const dmg = enemies[id].controller.dmg;
+                if (dmg > maxDmg) {
+                    maxId = id;
+                    maxDmg = dmg;
+                }
+            }
+
+            select(enemies[maxId].ctx.canvas);
+            return maxId;
+        } else if (algoBtn.dataset.algo == "Manual") {
+            return enemies.findIndex((enemy) => enemy.ctx.canvas.dataset.selected == "true");
+        }
     }
 
     window.addEventListener("keydown", (e) => {
