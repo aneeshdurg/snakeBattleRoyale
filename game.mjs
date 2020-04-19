@@ -47,7 +47,10 @@ export class Game {
     shrink() {
         if (this.pwr >= 10 && this.snake.length > 1) {
             this.pwr -= 10;
+
             const points = Math.floor(this.snake.length / 2);
+            this.dmg = Math.min(this.dmg - points, 0);
+
             for (let i = 0; i < points; i++)
                 this.snake.shift();
             return points;
@@ -58,6 +61,7 @@ export class Game {
         this.dmg += dmg;
         // TODO dmg timer and stuff
         // also negative dmg when collecting apples
+        console.log(`Owie ${this.dmg}`);
     }
 
     ticksPerMove() {
@@ -195,6 +199,11 @@ export class Game {
             this.ctx.fillStyle = "red";
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         } else {
+            if (this.dmg >= 50) {
+                this.dmg -= 50;
+                this.addToSnake += 10;
+            }
+
             this.render();
 
             this._ticks++;

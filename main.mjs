@@ -22,9 +22,13 @@ function main() {
             ctx: enemyCtx,
             offscreenCanvas: enemyOffscreenCanvas,
             game: enemyGame,
-            ai: new GameAI(enemyGame, Math.max(Math.random(), 1)),
+            ai: new GameAI(enemyGame, i, game, enemies, 0.9, 1),
         });
         enemyParent.appendChild(enemyCanvas);
+    }
+
+    function enemyTargetingAlgorithm() {
+        return Math.floor(Math.random() * enemies.length);
     }
 
     window.addEventListener("keydown", (e) => {
@@ -39,7 +43,8 @@ function main() {
             newMove = Game.RIGHT;
         else if (e.key == " ") {
             const dmg = game.shrink();
-            enemies[enemyTargetingAlgorithm()].game.damage(dmg);
+            if (dmg)
+                enemies[enemyTargetingAlgorithm()].game.damage(dmg);
         }
 
         if (newMove)
@@ -64,6 +69,7 @@ function main() {
             const length = game.snake.length;
 
             document.getElementById("pwrbar").value = game.pwr;
+            document.getElementById("dmgbar").value = game.dmg;
 
             const idsToRemove = [];
             enemies.forEach((enemy, id) => {
@@ -72,7 +78,11 @@ function main() {
                     enemy.game.ontick();
                 }
                 if (ticks == 0) {
-                        enemy.ctx.drawImage(enemy.offscreenCanvas, 0, 0);
+                    enemy.ctx.drawImage(enemy.offscreenCanvas, 0, 0);
+                    enemy.ctx.fillStyle = "#42e9f540";
+                    enemy.ctx.fillRect(10, 10, enemy.canvas.width * Math.min(enemy.game.pwr / 10, 1), 32);
+                    enemy.ctx.fillStyle = "#f54b4240";
+                    enemy.ctx.fillRect(10, 52, enemy.canvas.width * Math.min(enemy.game.dmg / 20, 1), 32);
                 }
                 if (enemy.game.gameover) {
                     idsToRemove.push(id);

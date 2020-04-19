@@ -2,9 +2,13 @@ import {Game} from './game.mjs'
 
 // A simple snake AI
 export class GameAI {
-    constructor(game, intelligence) {
+    constructor(game, id, nonAIGame, otherAIs, intelligence, aggression) {
         this.game = game;
         this.intelligence = intelligence;
+        this.aggression = aggression;
+        this.id = id;
+        this.nonAIGame = nonAIGame;
+        this.otherAIs = otherAIs;
     }
 
     computeShortestPath(current, target, visited, known) {
@@ -41,7 +45,6 @@ export class GameAI {
 
             if (!that.game.isOutOfBounds(nextPos) && !that.game.hasSnakeOnTile(nextPos) && !visited.has(nextId)) {
                 const d = that.computeShortestPath(nextPos, target, visited, known);
-                // console.log(`Checking direction ${currentDirection} ${d.distance}`);
                 if (d.distance < distance) {
                     distance = d.distance;
                     direction = currentDirection;
@@ -78,7 +81,39 @@ export class GameAI {
             this.game.changeDirection(d.direction);
         } else {
             const directions = [Game.LEFT, Game.RIGHT, Game.UP, Game.DOWN];
-            this.game.changeDirection(directions[Math.floor(Math.random() * 4)]);
+            let direction = Math.floor(Math.random() * 4);
+            for (let i = 0; i < 4; i++) {
+                direction += i;
+                direction %= 4;
+                const currentDirection = directions[direction];
+                let nextPos = [...this.game.snake[this.game.snake.length - 1]];
+                if (currentDirection == Game.LEFT)
+                    nextPos[0] -= 1;
+                else if (currentDirection == Game.RIGHT)
+                    nextPos[0] += 1;
+                else if (currentDirection == Game.UP)
+                    nextPos[1] -= 1;
+                else if (currentDirection == Game.DOWN)
+                    nextPos[1] += 1;
+
+                if (!this.game.isOutOfBounds(nextPos) && !this.game.hasSnakeOnTile(nextPos))
+                    break;
+            }
+            this.game.changeDirection(directions[direction]);
+        }
+
+        if (Math.random() < this.aggression) {
+            const dmg = this.game.shrink();
+            if (dmg) {
+                const enemyID = Math.floor(Math.random() * this.otherAIs.length);
+                if (enemyID == this.id) {
+                    console.log("damaged nonAI");
+                    this.nonAIGame.damage(dmg);
+                } else {
+                    console.log("damaged AI");
+                    this.otherAIs[enemyID].game.damage(dmg);
+                }
+            }
         }
     }
 }
