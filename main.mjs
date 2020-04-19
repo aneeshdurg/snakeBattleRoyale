@@ -46,6 +46,15 @@ function validateClient(conn) {
 }
 
 async function main() {
+    const instructionModal = document.getElementById("instructionModal");
+    const instructionsBtn = document.getElementById("instructions");
+    instructionsBtn.onclick = () => {
+        instructionModal.style.display = "block";
+    }
+    instructionModal.onclick = () => {
+        instructionModal.style.display = "none";
+    };
+
     const connections = new Map();
 
     async function setupNetworking() {
@@ -237,6 +246,7 @@ async function main() {
 
             let unacked  = 0;
             let setupDone = false;
+            const clientsDisplay = document.getElementById("clients");
             const startGame = new Promise(start => {
                 if (expectedClients == 0) {
                     startBtn.onclick = () => {
@@ -250,7 +260,6 @@ async function main() {
                         start();
                     };
 
-                    const clientsDisplay = document.getElementById("clients");
                     clientsDisplay.style.display = "";
                 }
 

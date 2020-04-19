@@ -83,9 +83,48 @@
 .container {
     min-width: 1056px;
 }
+
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
+}
 </style>
 <script type="module" src="./main.mjs"></script>
 
+<div class="modal" id="instructionModal">
+    <div class="modal-content">
+        <h1> How to play </h1>
+        <ul>
+            <li> Use arrow keys or WASD to move the snake </li>
+            <li> Near the top the screen you'll see a blue bar indicating
+                how much energy you have. Press space to use that energy to
+                attack opponents! </li>
+            <li> Collect the red dots to build up energy! </li>
+            <li> Watch out for the red bar below the energy bar! That
+                displays how much damage you've taken! When it fills up your
+                snake will grow and begin to move faster. </li>
+            // TODO targeting rules
+        </ul>
+    </div>
+</div>
 <div class="container">
     <div class="statsContainer">
         <h1 align="center"> Snake 99 </h1>
@@ -100,10 +139,8 @@
         <div id="clients" style="display: none;">
             <h2> Clients </h2>
         </div>
-        <div id="instructions">
-            <hr>
-            TODO add instructions
-        </div>
+        <hr>
+        <div id="instructions" class="button">View Instructions</div>
     </div>
     <div id="gameContainer" style="display: none;">
         <div class="displayContainer">
