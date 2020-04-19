@@ -28,6 +28,11 @@
     height: 100%;
 }
 
+#enemiesHeader {
+    height: 15%;
+    overflow: auto;
+}
+
 #enemiesParent {
     height: 85%;
     overflow: auto;
@@ -51,12 +56,14 @@
     </div>
 
     <div id="enemiesContainer">
-        <h1> Enemies </h1>
-        <button> Manual </button>
-        <button> Random </button>
-        <button> Power </button>
-        <button> Damage </button>
-        <hr>
+        <div id="enemiesHeader">
+            <h1> Enemies </h1>
+            <button> Manual </button>
+            <button> Random </button>
+            <button> Power </button>
+            <button> Damage </button>
+            <hr>
+        </div>
         <div id="enemiesParent">
         </div>
     </div>
