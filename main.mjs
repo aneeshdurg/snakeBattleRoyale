@@ -221,13 +221,13 @@ async function main() {
                             });
                             connections.set(client, clientConn);
                             console.log("New conns: ", connections.size);
-
-                            console.log("Sending ack to host");
-                            host.send(JSON.stringify({
-                                protocol: 'setup',
-                                type: 'ack',
-                            }));
                         }
+
+                        console.log("Sending ack to host");
+                        host.send(JSON.stringify({
+                            protocol: 'setup',
+                            type: 'ack',
+                        }));
                     }
                 });
             });
@@ -244,7 +244,7 @@ async function main() {
                 netInfo.appendChild(startBtn);
             }
 
-            let unacked  = 0;
+            let unacked = 0;
             let setupDone = false;
             const clientsDisplay = document.getElementById("clients");
             const startGame = new Promise(start => {
