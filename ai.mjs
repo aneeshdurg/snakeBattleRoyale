@@ -1,4 +1,4 @@
-import {Game} from './game.mjs'
+import {Directions} from './game.mjs'
 
 // A simple snake AI
 export class GameAI {
@@ -17,7 +17,7 @@ export class GameAI {
         if (current[0] == target[0] && current[1] == target[1]) {
             return {
                 distance: 0,
-                direction: Game.LEFT,
+                direction: Directions.LEFT,
             };
         }
 
@@ -29,17 +29,17 @@ export class GameAI {
         visited.add(id);
 
         let distance = Infinity
-        let direction = Game.LEFT;
+        let direction = Directions.LEFT;
         const that = this;
         function helper(currentDirection) {
             let nextPos = [...current];
-            if (currentDirection == Game.LEFT)
+            if (currentDirection == Directions.LEFT)
                 nextPos[0] -= 1;
-            else if (currentDirection == Game.RIGHT)
+            else if (currentDirection == Directions.RIGHT)
                 nextPos[0] += 1;
-            else if (currentDirection == Game.UP)
+            else if (currentDirection == Directions.UP)
                 nextPos[1] -= 1;
-            else if (currentDirection == Game.DOWN)
+            else if (currentDirection == Directions.DOWN)
                 nextPos[1] += 1;
             const nextId = nextPos[0] + nextPos[1] * that.game.width;
 
@@ -52,10 +52,10 @@ export class GameAI {
             }
         }
 
-        helper(Game.LEFT);
-        helper(Game.RIGHT);
-        helper(Game.UP);
-        helper(Game.DOWN);
+        helper(Directions.LEFT);
+        helper(Directions.RIGHT);
+        helper(Directions.UP);
+        helper(Directions.DOWN);
 
         visited.delete(id);
 
@@ -80,20 +80,20 @@ export class GameAI {
             const d = this.computeShortestPath(root, target, new Set(), new Map());
             this.game.changeDirection(d.direction);
         } else {
-            const directions = [Game.LEFT, Game.RIGHT, Game.UP, Game.DOWN];
+            const directions = [Directions.LEFT, Directions.RIGHT, Directions.UP, Directions.DOWN];
             let direction = Math.floor(Math.random() * 4);
             for (let i = 0; i < 4; i++) {
                 direction += i;
                 direction %= 4;
                 const currentDirection = directions[direction];
                 let nextPos = [...this.game.snake[this.game.snake.length - 1]];
-                if (currentDirection == Game.LEFT)
+                if (currentDirection == Directions.LEFT)
                     nextPos[0] -= 1;
-                else if (currentDirection == Game.RIGHT)
+                else if (currentDirection == Directions.RIGHT)
                     nextPos[0] += 1;
-                else if (currentDirection == Game.UP)
+                else if (currentDirection == Directions.UP)
                     nextPos[1] -= 1;
-                else if (currentDirection == Game.DOWN)
+                else if (currentDirection == Directions.DOWN)
                     nextPos[1] += 1;
 
                 if (!this.game.isOutOfBounds(nextPos) && !this.game.hasSnakeOnTile(nextPos))

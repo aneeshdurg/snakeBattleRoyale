@@ -2,12 +2,14 @@ function posEq(a, b) {
     return a[0] == b[0] && a[1] == b[1];
 }
 
-export class Game {
-    static LEFT = 1;
-    static RIGHT = 2;
-    static UP = 3;
-    static DOWN = 4;
+export const Directions = {
+    LEFT: 1,
+    RIGHT: 2,
+    UP: 3,
+    DOWN: 4,
+}
 
+export class Game {
     tileSize = 32
     width = 20
     height = 20
@@ -28,7 +30,7 @@ export class Game {
         this.ctx = this.canvas.getContext("2d");
 
         this.snake = [];
-        this.lastMove = Game.UP;
+        this.lastMove = Directions.UP;
 
         this.applePos = [Math.floor(this.width / 2), Math.floor(this.height / 2)];
         this.collectApple();
@@ -105,13 +107,13 @@ export class Game {
         const currentPos = this.snake[this.snake.length - 1];
         let nextPos = [...currentPos];
 
-        if (direction == Game.LEFT) {
+        if (direction == Directions.LEFT) {
             nextPos[0] -= 1;
-        } else if (direction == Game.RIGHT) {
+        } else if (direction == Directions.RIGHT) {
             nextPos[0] += 1;
-        } else if (direction == Game.UP) {
+        } else if (direction == Directions.UP) {
             nextPos[1] -= 1;
-        } else if (direction == Game.DOWN) {
+        } else if (direction == Directions.DOWN) {
             nextPos[1] += 1;
         }
 

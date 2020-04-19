@@ -1,4 +1,4 @@
-import {Game} from "./game.mjs"
+import {Game, Directions} from "./game.mjs"
 import {GameAI} from "./ai.mjs"
 
 function main() {
@@ -34,13 +34,13 @@ function main() {
     window.addEventListener("keydown", (e) => {
         let newMove = null;
         if (e.key == "w" || e.key == "ArrowUp")
-            newMove = Game.UP;
+            newMove = Directions.UP;
         else if (e.key == "a" || e.key == "ArrowLeft")
-            newMove = Game.LEFT;
+            newMove = Directions.LEFT;
         else if (e.key == "s" || e.key == "ArrowDown")
-            newMove = Game.DOWN;
+            newMove = Directions.DOWN;
         else if (e.key == "d" || e.key == "ArrowRight")
-            newMove = Game.RIGHT;
+            newMove = Directions.RIGHT;
         else if (e.key == " ") {
             const dmg = game.shrink();
             if (dmg)
@@ -56,7 +56,7 @@ function main() {
     let lastTime = 0;
     let ticks = 0;
     let ticksPerEnemyRender = 10;
-    const directions = [Game.LEFT, Game.UP, Game.RIGHT, Game.DOWN];
+    const directions = [Directions.LEFT, Directions.UP, Directions.RIGHT, Directions.DOWN];
     function run() {
         const currTime = (new Date()).getTime();
         if ((currTime - lastTime) > mspf) {
