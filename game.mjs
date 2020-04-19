@@ -184,11 +184,19 @@ export class Game {
             this.tileSize * this.applePos[0], this.tileSize * this.applePos[1], this.tileSize, this.tileSize);
     }
 
+    renderbars() {
+        this.ctx.fillStyle = "#42e9f540";
+        this.ctx.fillRect(10, 10, (this.canvas.width - 20) * Math.min(this.pwr / 10, 1), 32);
+        this.ctx.fillStyle = "#f54b4240";
+        this.ctx.fillRect(10, 52, (this.canvas.width - 20) * Math.min(this.dmg / 20, 1), 32);
+    }
+
     render() {
         this.clear();
         this.renderBackground();
         this.updateSnake();
         this.renderApple();
+        this.renderbars();
     }
 
     ontick() {

@@ -68,22 +68,14 @@ function main() {
             const speed = game.ticksPerMove();
             const length = game.snake.length;
 
-            document.getElementById("pwrbar").value = game.pwr;
-            document.getElementById("dmgbar").value = game.dmg;
-
             const idsToRemove = [];
             enemies.forEach((enemy, id) => {
                 if (Math.random() <= 0.75) {
                     enemy.ai.ontick();
                     enemy.game.ontick();
                 }
-                if (ticks == 0) {
+                if (ticks == 0)
                     enemy.ctx.drawImage(enemy.offscreenCanvas, 0, 0);
-                    enemy.ctx.fillStyle = "#42e9f540";
-                    enemy.ctx.fillRect(10, 10, enemy.canvas.width * Math.min(enemy.game.pwr / 10, 1), 32);
-                    enemy.ctx.fillStyle = "#f54b4240";
-                    enemy.ctx.fillRect(10, 52, enemy.canvas.width * Math.min(enemy.game.dmg / 20, 1), 32);
-                }
                 if (enemy.game.gameover) {
                     idsToRemove.push(id);
                 }
