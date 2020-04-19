@@ -1,3 +1,4 @@
+import {Controller} from './controller.mjs'
 import {Directions} from './game.mjs'
 
 // A simple snake AI
@@ -109,9 +110,37 @@ export class GameAI {
                 if (enemyID == this.id) {
                     this.nonAIGame.damage(dmg);
                 } else {
-                    this.otherAIs[enemyID].game.damage(dmg);
+                    this.otherAIs[enemyID].controller.damage(dmg);
                 }
             }
         }
+    }
+}
+
+export class GameAIController extends Controller {
+    constructor(canvas, game, ai) {
+        super();
+        this.canvas = canvas;
+        this.game = game;
+        this.ai = ai;
+    }
+
+    damage(dmg) {
+        this.game.damage(dmg);
+    }
+
+    ontick() {
+        if (Math.random() <= 0.75) {
+            this.ai.ontick();
+            this.game.ontick();
+        }
+    }
+
+    async draw(ctx) {
+        ctx.drawImage(this.canvas, 0, 0);
+    }
+
+    gameover() {
+        return this.game.gameover;
     }
 }

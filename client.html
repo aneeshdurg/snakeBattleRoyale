@@ -1,0 +1,42 @@
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
+    console.log("Loading peer.js");
+    const p = new Promise(r => {
+        const peerJs = document.createElement("script");
+        peerJs.type = "text/javascript";
+        peerJs.src = "https://unpkg.com/peerjs@1.0.0/dist/peerjs.min.js";
+        peerJs.onload = r;
+        peerJs.onreadystatechange = r;
+        document.head.appendChild(peerJs);
+    });
+    await p;
+    console.log("Loaded peer.js");
+
+    const peer = new Peer();
+    let peerId = null;
+    console.log("Waiting to connect to peerserver");
+    await new Promise((resolve, reject) => {
+        peer.on('open', function(id) {
+            peerId = id;
+            resolve();
+        });
+
+        peer.on('error', function(err) {
+            alert("Failed to connect to peercloudserver!");
+            reject(err);
+        });
+    });
+    console.log("Connected to peerserver", peerId);
+
+    const host = peer.connect(prompt("idk"));
+    host.on('open', () => {
+        host.send("Hello!");
+        host.on('data', (d) => {
+            console.log("Recieved", d);
+            host.on('data', (d) => {
+                console.log("Second!", d);
+            });
+        });
+    });
+});
+</script>

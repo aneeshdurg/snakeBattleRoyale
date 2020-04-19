@@ -15,6 +15,7 @@ export class Game {
     height = 20
 
     addToSnake = 0
+    dmgPerAtk = 10
 
     gameover = false;
     victory = false;
@@ -188,7 +189,7 @@ export class Game {
         this.ctx.fillStyle = "#42e9f540";
         this.ctx.fillRect(10, 10, (this.canvas.width - 20) * Math.min(this.pwr / 10, 1), 32);
         this.ctx.fillStyle = "#f54b4240";
-        this.ctx.fillRect(10, 52, (this.canvas.width - 20) * Math.min(this.dmg / 20, 1), 32);
+        this.ctx.fillRect(10, 52, (this.canvas.width - 20) * Math.min(this.dmg / this.dmgPerAtk, 1), 32);
     }
 
     render() {
@@ -207,8 +208,8 @@ export class Game {
             this.ctx.fillStyle = "red";
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         } else {
-            if (this.dmg >= 50) {
-                this.dmg -= 50;
+            if (this.dmg >= this.dmgPerAtk) {
+                this.dmg -= this.dmgPerAtk;
                 this.addToSnake += 10;
             }
 

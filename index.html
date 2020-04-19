@@ -21,6 +21,20 @@
     background: #2b2b2b40;
 }
 
+.loader {
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 16px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .game {
     width: 100%;
     max-height: 100%;
@@ -32,7 +46,7 @@
     width: 12%;
 }
 
-.gameContainer {
+#gameContainer {
     float: left;
     width: 80%
 }
@@ -65,34 +79,48 @@
     margin-right: 1%;
     margin-bottom: 1%;
 }
+
+.container {
+    min-width: 1056px;
+}
 </style>
 <script type="module" src="./main.mjs"></script>
 
-<div class="statsContainer">
-    <h1 align="center"> Snake 99 </h1>
-    <p id="stats" style="display: none;"></p>
-    <div id="networkOptions" style="display: none">
-        <div class="button" id="peerconnect">Join a hosted game</div>
-        <div class="button" id="peerhost">Host a game</div>
-        <div class="button" id="lobby">Join the lobby</div>
-        <div class="button" id="offline">Play Offline</div>
-    </div>
-</div>
-<div class="gameContainer">
-    <div class="displayContainer">
-        <canvas tabindex="1" id="display" class="game"></canvas>
-    </div>
-
-    <div id="enemiesContainer">
-        <div id="enemiesHeader">
-            <h1> Enemies </h1>
-            <div class="button"> Manual </div>
-            <div class="button"> Random </div>
-            <div class="button"> Power  </div>
-            <div class="button"> Damage </div>
-            <hr>
+<div class="container">
+    <div class="statsContainer">
+        <h1 align="center"> Snake 99 </h1>
+        <p id="stats" style="display: none;"></p>
+        <div id="networkOptions" style="display: none">
+            <div class="button" id="peerconnect">Join a hosted game</div>
+            <div class="button" id="peerhost">Host a game</div>
+            <div class="button" id="lobby">Join the lobby</div>
+            <div class="button" id="offline">Play Offline</div>
         </div>
-        <div id="enemiesParent">
+        <div id="networkInfo"></div>
+        <div id="clients" style="display: none;">
+            <h2> Clients </h2>
+        </div>
+        <div id="instructions">
+            <hr>
+            TODO add instructions
+        </div>
+    </div>
+    <div id="gameContainer" style="display: none;">
+        <div class="displayContainer">
+            <canvas id="display" class="game"></canvas>
+        </div>
+
+        <div id="enemiesContainer">
+            <div id="enemiesHeader">
+                <h1> Enemies </h1>
+                <div class="button"> Manual </div>
+                <div class="button"> Random </div>
+                <div class="button"> Power  </div>
+                <div class="button"> Damage </div>
+                <hr>
+            </div>
+            <div id="enemiesParent">
+            </div>
         </div>
     </div>
 </div>
