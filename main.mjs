@@ -88,17 +88,11 @@ async function main() {
             let loader = createLoader();
             netInfo.innerHTML = "Connecting to lobby...";
             netInfo.appendChild(loader);
-            const wsUrls = ["ws://localhost:5001/ws"];
+            const wsUrls = ["ws://18.220.3.4:5000/ws"];
             let ws = null
             for (let wsIdx = 0; wsIdx < wsUrls.length; wsIdx++) {
                 try {
                     ws = new WebSocket(wsUrls[wsIdx]);
-                    console.log(ws);
-                    ws.addEventListener("error", (e) => {
-                        console.log(e);
-                        e.preventDefault();
-                        ws = null;
-                    });
                     break;
                 } catch {
                     continue;
