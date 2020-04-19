@@ -107,10 +107,8 @@ export class GameAI {
             if (dmg) {
                 const enemyID = Math.floor(Math.random() * this.otherAIs.length);
                 if (enemyID == this.id) {
-                    console.log("damaged nonAI");
                     this.nonAIGame.damage(dmg);
                 } else {
-                    console.log("damaged AI");
                     this.otherAIs[enemyID].game.damage(dmg);
                 }
             }

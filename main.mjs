@@ -1,7 +1,71 @@
 import {Game, Directions} from "./game.mjs"
 import {GameAI} from "./ai.mjs"
 
-function main() {
+async function getNetworkingMode() {
+    let networkingMode = "";
+    const networkOptions = document.getElementById("networkOptions");
+    const p = new Promise(r => {
+        for (let mode of ["offline", "lobby", "peerconnect", "peerhost"]) {
+            document.getElementById(mode).onclick = () => {
+                networkingMode = mode;
+                r();
+            };
+        }
+    });
+
+    networkOptions.style.display = "";
+    await p;
+    networkOptions.style.display = "none";
+
+    return networkingMode;
+}
+
+async function main() {
+    const networkingMode = await getNetworkingMode();
+
+    console.log(`Selected mode ${networkingMode}`);
+    if (networkingMode.startsWith("peer")) {
+        // TODO consider using a Worker here to offload all networking to another
+        // process.
+        const peer = new Peer();
+        let peerId = null;
+        console.log("Waiting to connect to peerserver");
+        await new Promise((resolve, reject) => {
+            peer.on('open', function(id) {
+                peerId = id;
+                resolve();
+            });
+
+            peer.on('error', function(err) {
+                alert("Failed to connect to peercloudserver!");
+                reject(err);
+            });
+        });
+        console.log("Connected to peerserver");
+
+        if (networkingMode.endsWith("connect")) {
+            const hostId = prompt("Enter the ID of the peer you want to connect to");
+            // host will send a list of other clients
+            const conn = peer.connect(hostId);
+            await new Promise(r => {
+                conn.on('open', () => {
+                    r();
+                });
+            });
+            conn.on('data', (d) => { console.log("Recieved", d); conn.send("ack!"); });
+        } else {
+            // TODO display ID to allow others to connect
+        }
+    } else if (networkingMode == "lobby") {
+        // TODO
+        throw new Error("Unimplemented");
+    }
+
+    // TODO add an option menu to either:
+    //  a) connect to the peercloud server
+    //  b) connect to my server
+    //  c) play offline
+
     const canvas = document.getElementById("display");
     const game = new Game(canvas);
 
@@ -93,6 +157,17 @@ function main() {
     run();
 }
 
-document.addEventListener('DOMContentLoaded', (event) => {
-   main();
+document.addEventListener('DOMContentLoaded', async function () {
+    console.log("Loading peer.js");
+    const p = new Promise(r => {
+        const peerJs = document.createElement("script");
+        peerJs.type = "text/javascript";
+        peerJs.src = "https://unpkg.com/peerjs@1.0.0/dist/peerjs.min.js";
+        peerJs.onload = r;
+        peerJs.onreadystatechange = r;
+        document.head.appendChild(peerJs);
+    });
+    await p;
+    console.log("Loaded peer.js");
+    main();
 });

@@ -51,7 +51,7 @@ export class Game {
             this.pwr -= 10;
 
             const points = Math.floor(this.snake.length / 2);
-            this.dmg = Math.min(this.dmg - points, 0);
+            this.dmg = Math.max(this.dmg - points, 0);
 
             for (let i = 0; i < points; i++)
                 this.snake.shift();
@@ -62,8 +62,6 @@ export class Game {
     damage(dmg) {
         this.dmg += dmg;
         // TODO dmg timer and stuff
-        // also negative dmg when collecting apples
-        console.log(`Owie ${this.dmg}`);
     }
 
     ticksPerMove() {

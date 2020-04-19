@@ -1,4 +1,26 @@
 <style>
+.button {
+    border-style: solid;
+    margin-bottom: 1em;
+    padding: 1em;
+    text-align: center;
+}
+
+.button:hover {
+    cursor: pointer;
+    border-style: dashed;
+}
+
+.button-selected {
+    border-style: dashed;
+    background: #2b2b2b40;
+}
+
+.button:active {
+    border-style: dashed;
+    background: #2b2b2b40;
+}
+
 .game {
     width: 100%;
     max-height: 100%;
@@ -49,6 +71,12 @@
 <div class="statsContainer">
     <h1 align="center"> Snake 99 </h1>
     <p id="stats" style="display: none;"></p>
+    <div id="networkOptions" style="display: none">
+        <div class="button" id="peerconnect">Join a hosted game</div>
+        <div class="button" id="peerhost">Host a game</div>
+        <div class="button" id="lobby">Join the lobby</div>
+        <div class="button" id="offline">Play Offline</div>
+    </div>
 </div>
 <div class="gameContainer">
     <div class="displayContainer">
@@ -58,10 +86,10 @@
     <div id="enemiesContainer">
         <div id="enemiesHeader">
             <h1> Enemies </h1>
-            <button> Manual </button>
-            <button> Random </button>
-            <button> Power </button>
-            <button> Damage </button>
+            <div class="button"> Manual </div>
+            <div class="button"> Random </div>
+            <div class="button"> Power  </div>
+            <div class="button"> Damage </div>
             <hr>
         </div>
         <div id="enemiesParent">
