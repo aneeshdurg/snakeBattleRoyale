@@ -14,6 +14,9 @@ export class Game {
 
     addToSnake = 0
 
+    gameover = false;
+    victory = false;
+
     constructor(canvas) {
         this._ticks = 0;
 
@@ -90,6 +93,10 @@ export class Game {
         return pt[0] < 0 || pt[0] >= this.width || pt[1] < 0 || pt[1] >= this.height;
     }
 
+    hasSnakeOnTile(pt) {
+        return this.snake.findIndex(x => posEq(x, pt)) != -1;
+    }
+
     move(direction) {
         const currentPos = this.snake[this.snake.length - 1];
         let nextPos = [...currentPos];
@@ -105,9 +112,7 @@ export class Game {
         }
 
         // TODO render something on death
-        if (this.snake.findIndex(x => posEq(x, nextPos)) != -1) {
-            return -1;
-        } else if (this.isOutOfBounds(nextPos)) {
+        if (this.hasSnakeOnTile(nextPos) || this.isOutOfBounds(nextPos)) {
             return -1;
         }
 
@@ -138,7 +143,7 @@ export class Game {
             nextPos = this.move(this.lastMove);
 
         if (nextPos == -1) {
-            // TODO gameover
+            this.gameover = true
             return;
         }
 
@@ -183,10 +188,17 @@ export class Game {
     }
 
     ontick() {
-        // get input somehow
-        this.render();
+        if (this.victory) {
+            this.ctx.fillStyle = "green";
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        } else if (this.gameover) {
+            this.ctx.fillStyle = "red";
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        } else {
+            this.render();
 
-        this._ticks++;
-        this._ticks %= this.ticksPerMove();
+            this._ticks++;
+            this._ticks %= this.ticksPerMove();
+        }
     }
 }

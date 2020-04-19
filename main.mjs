@@ -1,8 +1,32 @@
 import {Game} from "./game.mjs"
+import {GameAI} from "./ai.mjs"
 
 function main() {
     const canvas = document.getElementById("display");
     const game = new Game(canvas);
+
+    const enemyParent = document.getElementById("enemiesParent");
+
+    const enemies = [];
+    const maxAIs = 20;
+    for (let i = 0; i < maxAIs; i++) {
+        const enemyCanvas = document.createElement("canvas");
+        enemyCanvas.classList.add("enemy");
+        const enemyCtx = enemyCanvas.getContext("2d");
+        const enemyOffscreenCanvas = document.createElement("canvas");
+        const enemyGame = new Game(enemyOffscreenCanvas);
+        enemyCanvas.width = enemyOffscreenCanvas.width;
+        enemyCanvas.height = enemyOffscreenCanvas.height;
+        enemies.push({
+            canvas: enemyCanvas,
+            ctx: enemyCtx,
+            offscreenCanvas: enemyOffscreenCanvas,
+            game: enemyGame,
+            ai: new GameAI(enemyGame, Math.max(Math.random(), 1)),
+        });
+        enemyParent.appendChild(enemyCanvas);
+    }
+
     window.addEventListener("keydown", (e) => {
         let newMove = null;
         if (e.key == "w" || e.key == "ArrowUp")
@@ -13,48 +37,52 @@ function main() {
             newMove = Game.DOWN;
         else if (e.key == "d" || e.key == "ArrowRight")
             newMove = Game.RIGHT;
-        else if (e.key == " ")
-            game.shrink();
-        // TODO attack other players after shrink
+        else if (e.key == " ") {
+            const dmg = game.shrink();
+            enemies[enemyTargetingAlgorithm()].game.damage(dmg);
+        }
 
         if (newMove)
             game.changeDirection(newMove);
     });
 
-    const enemyParent = document.getElementById("enemiesParent");
 
-    const enemies = [];
-    for (let i = 0; i < 99; i++) {
-        const enemyCanvas = document.createElement("canvas");
-        enemyCanvas.classList.add("enemy");
-        enemyCanvas.width = canvas.width;
-        enemyCanvas.height = canvas.height;
-        const enemyCtx = enemyCanvas.getContext("2d");
-        enemies.push({
-            canvas: enemyCanvas,
-            ctx: enemyCtx,
-        });
-        enemyParent.appendChild(enemyCanvas);
-    }
-
-
-    const mspf = 1000 / 60;
+    const mspf = 1000 / 30;
     let lastTime = 0;
     let ticks = 0;
     let ticksPerEnemyRender = 10;
+    const directions = [Game.LEFT, Game.UP, Game.RIGHT, Game.DOWN];
     function run() {
         const currTime = (new Date()).getTime();
         if ((currTime - lastTime) > mspf) {
+            if (enemies.length == 0 && !game.gameover)
+                game.victory = true;
+
             game.ontick();
             lastTime = currTime;
             const speed = game.ticksPerMove();
             const length = game.snake.length;
-            document.getElementById("stats").innerHTML = `length: ${length} speed: ${speed} pwr: ${game.pwr}`;
+
             document.getElementById("pwrbar").value = game.pwr;
-            if (ticks == 0) {
-                for (let enemy of enemies)
-                    enemy.ctx.drawImage(canvas, 0, 0);
-            }
+
+            const idsToRemove = [];
+            enemies.forEach((enemy, id) => {
+                if (Math.random() <= 0.75) {
+                    enemy.ai.ontick();
+                    enemy.game.ontick();
+                }
+                if (ticks == 0) {
+                        enemy.ctx.drawImage(enemy.offscreenCanvas, 0, 0);
+                }
+                if (enemy.game.gameover) {
+                    idsToRemove.push(id);
+                }
+            });
+
+            idsToRemove.forEach((id, count) => {
+                const enemy = enemies.splice(id - count, 1)[0];
+                enemy.ctx.clearRect(0, 0, enemy.canvas.width, enemy.canvas.height);
+            });
             ticks++;
             ticks %= ticksPerEnemyRender;
         }
