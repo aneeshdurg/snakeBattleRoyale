@@ -52,7 +52,7 @@ export class Game {
             this.pwr -= 10;
 
             const points = Math.floor(this.snake.length / 2);
-            this.dmg = Math.max(this.dmg - points, 0);
+            this.dmg = Math.floor(this.dmg / 2);
 
             for (let i = 0; i < points; i++)
                 this.snake.shift();
@@ -62,7 +62,6 @@ export class Game {
 
     damage(dmg) {
         this.dmg += dmg;
-        // TODO dmg timer and stuff
     }
 
     ticksPerMove() {
@@ -138,10 +137,6 @@ export class Game {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    renderBackground() {
-        // TODO render background tiles
-    }
-
     updateSnake() {
         let nextPos = 0;
         if (this._ticks == 0)
@@ -194,7 +189,6 @@ export class Game {
 
     render() {
         this.clear();
-        this.renderBackground();
         this.updateSnake();
         this.renderApple();
         this.renderbars();

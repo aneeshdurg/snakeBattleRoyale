@@ -106,7 +106,10 @@ export class GameAI {
         if (Math.random() < this.aggression) {
             const dmg = this.game.shrink();
             if (dmg) {
-                const enemyID = Math.floor(Math.random() * this.otherAIs.length);
+                let enemyID = Math.floor(Math.random() * this.otherAIs.length);
+                // attack the local player w/ high probability
+                if (Math.random() < 0.75)
+                    enemyID = this.id;
                 if (enemyID == this.id) {
                     this.nonAIGame.damage(dmg);
                 } else {
