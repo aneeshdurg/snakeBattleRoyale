@@ -158,7 +158,13 @@ async function main() {
 
             connections.set(hostId, host);
 
+            let acceptingConnections = true;
             peer.on('connection', async (conn) => {
+                if (!acceptingConnections) {
+                    console.log(`Rejecting ${conn.peer}`);
+                    return;
+                }
+                console.log(`Accepting ${conn.peer}`);
                 const isValid = await validateClient(conn);
                 if (!isValid)
                     conn.close();
@@ -178,32 +184,40 @@ async function main() {
 
                     const msg = JSON.parse(d);
                     if (!msg.protocol || msg.protocol != 'setup') {
-                        alert("Malformed packet from host!");
+                        alert("Malformed packet from host! [" + msg.protocol + "]");
                         // idk
                         location.reload();
                     }
 
                     if (msg.type == 'start') {
-                        peer.on('connection', (conn) => {
-                            // reject new connections
-                            conn.close();
-                        });
+                        acceptingConnections = false;
                         start();
                         setupDone = true;
                     } else if (msg.type == 'advertisement') {
                         for (let client of msg.clients) {
+                            console.log(`Connecting to ${client} via ad`);
                             const clientConn = peer.connect(client);
+                            clientConn.on('error', console.log);
                             await new Promise(r => {
                                 clientConn.on('open', () => {
+                                    console.log(`open ${client}`);
                                     clientConn.send(JSON.stringify({
                                         protocol: 'setup',
                                         type: 'handshake',
                                     }));
                                     r();
                                 });
+                                console.log("hi");
                                 // TODO on error!
                             });
                             connections.set(client, clientConn);
+                            console.log("New conns: ", connections.size);
+
+                            console.log("Sending ack to host");
+                            host.send(JSON.stringify({
+                                protocol: 'setup',
+                                type: 'ack',
+                            }));
                         }
                     }
                 });
@@ -221,6 +235,8 @@ async function main() {
                 netInfo.appendChild(startBtn);
             }
 
+            let unacked  = 0;
+            let setupDone = false;
             const startGame = new Promise(start => {
                 if (expectedClients == 0) {
                     startBtn.onclick = () => {
@@ -240,20 +256,35 @@ async function main() {
 
                 // Setup protocol host
                 peer.on('connection', async (conn) => {
-                    console.log("Host recieved conn!");
+                    if (setupDone)
+                        return;
+
+                    console.log(`Host recieved conn! ${conn.peer}`);
                     const isValid = await validateClient(conn);
                     if (!isValid)
                         conn.close();
                     else {
                         // TODO validate that advertisement was successful
-                        // conn.on('data', () => {
-                        //     // verify advertisement results
-                        // });
+                        conn.on('data', (d) => {
+                            if (setupDone)
+                                return;
+
+                            const msg = JSON.parse(d);
+                            if (!msg.protocol || msg.protocol != 'setup')
+                                return;
+
+                            if (msg.type == "ack") {
+                                unacked--;
+                            }
+                        });
+
                         conn.send(JSON.stringify({
                             protocol: 'setup',
                             type: 'advertisement',
                             clients: [...connections.keys()],
                         }));
+                        console.log("Waiting on acks", conn.peer, "->", ...connections.keys());
+                        unacked++;
 
                         connections.set(conn.peer, conn);
                         if (connections.size == expectedClients)
@@ -273,7 +304,14 @@ async function main() {
             });
 
             await startGame;
+
             console.log("Host starting game");
+
+            while (unacked) {
+                await new Promise(r => setTimeout(r, 100));
+                console.log("Waiting on acks", unacked);
+            }
+            setupDone = true;
 
             for (let client of connections.values()) {
                 client.send(JSON.stringify({
