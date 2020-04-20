@@ -24,8 +24,11 @@ export class NetworkController extends Controller {
             else if (msg.type == "stats") {
                 this.pwr = msg.pwr;
                 this.dmg = msg.dmg;
-            } else if (msg.type == "damage")
+            } else if (msg.type == "damage") {
+                console.log("Recieved damage!");
                 playergame.damage(msg.dmg);
+                console.log("Dmg", msg.dmg, playergame.dmg);
+            }
         });
 
         const that = this;
@@ -39,10 +42,11 @@ export class NetworkController extends Controller {
     }
 
     damage(dmg) {
+        console.log("Sending damage");
         this.conn.send(JSON.stringify({
             protocol: 'game',
             type: 'damage',
-            dmg: 'dmg',
+            dmg: dmg,
         }));
     }
 

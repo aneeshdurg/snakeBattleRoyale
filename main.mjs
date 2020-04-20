@@ -287,13 +287,15 @@ async function main() {
                             }
                         });
 
-                        conn.send(JSON.stringify({
-                            protocol: 'setup',
-                            type: 'advertisement',
-                            clients: [...connections.keys()],
-                        }));
-                        console.log("Waiting on acks", conn.peer, "->", ...connections.keys());
-                        unacked++;
+                        if (connections.size) {
+                            conn.send(JSON.stringify({
+                                protocol: 'setup',
+                                type: 'advertisement',
+                                clients: [...connections.keys()],
+                            }));
+                            console.log("Waiting on acks", conn.peer, "->", ...connections.keys());
+                            unacked++;
+                        }
 
                         connections.set(conn.peer, conn);
                         if (connections.size == expectedClients)
