@@ -72,8 +72,12 @@ async function main() {
         netInfo.innerHTML = "Connecting to network...";
         netInfo.appendChild(loader);
 
-        const peer = new Peer(
-            {config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}});
+        const peer = new Peer({
+            host: "aneeshdurg.ddns.net",
+            port: 5001,
+            path: "peerserver",
+            config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}
+        });
         let peerId = null;
         await new Promise((resolve, reject) => {
             peer.on('open', function(id) {
