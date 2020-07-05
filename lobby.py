@@ -57,6 +57,13 @@ class web_app(web.Application):
 
 if __name__ == '__main__':
     app = web_app()
-    print("Now running at http://localhost:5000/ws")
-    app.listen(5000)
+    http_server = tornado.httpserver.HTTPServer(app,
+        ssl_options = {
+            "certfile": "/etc/letsencrypt/live/aneeshdurg.ddns.net/cert.pem",
+            "keyfile": "/etc/letsencrypt/live/aneeshdurg.ddns.net/privkey.pem",
+        }
+    )
+
+    print("Now running at https://localhost:5000/ws")
+    http_server.listen(5000)
     ioloop.IOLoop.instance().start()
