@@ -101,7 +101,7 @@ async function main() {
             let loader = createLoader();
             netInfo.innerHTML = "Connecting to lobby...";
             netInfo.appendChild(loader);
-            const wsUrls = ["ws://18.220.3.4:5000/ws"];
+            const wsUrls = ["ws://aneeshdurg.ddns.net:5000/ws"];
             let ws = null
             for (let wsIdx = 0; wsIdx < wsUrls.length; wsIdx++) {
                 try {
